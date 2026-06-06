@@ -251,17 +251,153 @@
     });
   }
 
+  // ---- デイリーボーナス ----
+  function renderDailyBanner() {
+    const banner = $('#daily-banner');
+    if (Game.canClaimDaily()) {
+      const s = GameState.get();
+      // 次の獲得は streak+1 (今日まだなら昨日の継続なら +1、そうでなければ1)
+      const yesterdayKey = (function(){
+        const d = new Date(); d.setDate(d.getDate()-1);
+        return d.getFullYear() + '-' + (d.getMonth()+1) + '-' + d.getDate();
+      })();
+      const nextStreak = (s.daily.lastClaimDay === yesterdayKey) ? s.daily.streak + 1 : 1;
+      const cappedIdx = Math.min(nextStreak - 1, GAME_DATA.DAILY_REWARDS.length - 1);
+      $('#daily-streak').textContent = `Day ${nextStreak}: ${GAME_DATA.DAILY_REWARDS[cappedIdx].label}`;
+      banner.classList.remove('hidden');
+    } else {
+      banner.classList.add('hidden');
+    }
+  }
+
+  function showDailyReward(reward, day) {
+    const wrap = document.createElement('div');
+    wrap.className = 'modal daily-reward-modal';
+    wrap.innerHTML = `
+      <div class="modal-bg"></div>
+      <div class="modal-body">
+        <h3>🎁 デイリーボーナス</h3>
+        <div class="daily-reward-icon">${reward.type === 'coins' ? '🪙' : '🎫'}</div>
+        <div class="daily-reward-label">${reward.label}</div>
+        <div class="daily-reward-streak">連続ログイン Day ${day}</div>
+        <button class="btn btn-primary" id="daily-modal-close">受け取る</button>
+      </div>
+    `;
+    document.body.appendChild(wrap);
+    const close = () => { wrap.remove(); renderAll(); };
+    wrap.querySelector('#daily-modal-close').addEventListener('click', close);
+    wrap.querySelector('.modal-bg').addEventListener('click', close);
+  }
+
+  function bindDaily() {
+    $('#daily-claim').addEventListener('click', () => {
+      const r = Game.claimDaily();
+      if (!r.ok) { toast(r.msg); return; }
+      GameState.save();
+      showDailyReward(r.reward, r.day);
+    });
+  }
+
+  // ---- 実績 ----
+  function renderAchievementsBanner() {
+    const pending = Game.pendingAchievements();
+    const banner = $('#ach-banner');
+    if (pending.length > 0) {
+      $('#ach-count').textContent = `${pending.length} 個のごほうび待ち`;
+      banner.classList.remove('hidden');
+    } else {
+      banner.classList.add('hidden');
+    }
+  }
+
+  function renderAchievementsList() {
+    const list = $('#achievements-list');
+    if (!list) return;
+    const s = GameState.get();
+    list.innerHTML = '';
+    GAME_DATA.ACHIEVEMENTS.forEach(a => {
+      const claimed = !!s.achievementsUnlocked[a.id];
+      const ok = a.check(s);
+      const item = document.createElement('div');
+      item.className = 'ach-item' + (claimed ? ' is-claimed' : (ok ? '' : ' is-locked'));
+      const rewardText = (a.reward.coins ? `🪙${a.reward.coins} ` : '') + (a.reward.tickets ? `🎫${a.reward.tickets}` : '');
+      item.innerHTML = `
+        <div class="ach-icon">${claimed ? '🏆' : (ok ? '✨' : '🔒')}</div>
+        <div class="ach-detail">
+          <div class="ach-name">${a.name}</div>
+          <div class="ach-desc">${a.desc}</div>
+          <div class="ach-reward">報酬: ${rewardText}</div>
+        </div>
+      `;
+      if (ok && !claimed) {
+        const btn = document.createElement('button');
+        btn.className = 'btn btn-secondary';
+        btn.textContent = '受取';
+        btn.addEventListener('click', () => {
+          const r = Game.claimAchievement(a.id);
+          if (r.ok) {
+            toast(`🏆 ${r.ach.name} 達成！`);
+            GameState.save();
+            renderAll();
+          }
+        });
+        item.appendChild(btn);
+      }
+      list.appendChild(item);
+    });
+  }
+
+  function bindAchievements() {
+    $('#ach-claim-all').addEventListener('click', () => {
+      const claimed = Game.claimAllAchievements();
+      if (claimed.length > 0) {
+        toast(`🏆 実績 ${claimed.length}件 達成！`);
+        GameState.save();
+        renderAll();
+      }
+    });
+  }
+
+  // ---- プレステージ進捗バー ----
+  function renderPrestigeProgress() {
+    const s = GameState.get();
+    const pp = Game.prestigePoints();
+    const currentPP = s.prestigePoints;
+    // 次の +1 PP のしきい値
+    // pp = floor(sqrt(total/1e6))  →  total >= (pp+1)^2 * 1e6 で次のPP
+    const totalEarned = s.totalEarned;
+    const currentPpFloor = pp;
+    const currentThreshold = currentPpFloor * currentPpFloor * 1e6;
+    const nextThreshold = (currentPpFloor + 1) * (currentPpFloor + 1) * 1e6;
+    const ratio = nextThreshold > currentThreshold
+      ? (totalEarned - currentThreshold) / (nextThreshold - currentThreshold)
+      : 0;
+    const fill = Math.max(0, Math.min(1, ratio)) * 100;
+    const bar = document.getElementById('prestige-bar-fill');
+    if (bar) bar.style.width = fill.toFixed(1) + '%';
+    const ppEl = document.getElementById('prestige-pp');
+    if (ppEl) ppEl.textContent = pp;
+    const curEl = document.getElementById('prestige-current');
+    if (curEl) curEl.textContent = `(現在 ${currentPP} PP / +${Math.round(currentPP*5)}%)`;
+  }
+
   // ---- 全体再描画 ----
   function renderAll() {
     renderResources();
     renderRates();
     renderFarm();
     renderBook();
+    renderDailyBanner();
+    renderAchievementsBanner();
+    renderAchievementsList();
+    renderPrestigeProgress();
   }
 
   global.UI = {
     bindTabs, bindGachaModal, bindGachaActions, bindShop, bindRewardAd, bindCollectBtn,
+    bindDaily, bindAchievements,
     renderAll, renderResources, renderFarm, renderBook,
+    renderDailyBanner, renderAchievementsBanner, renderAchievementsList, renderPrestigeProgress,
     toast, formatNum, showGachaResult,
   };
 })(window);

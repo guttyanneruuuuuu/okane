@@ -33,6 +33,10 @@
       boostUntil: 0,
       lastTick: Date.now(),
       stats: { gachas: 0, prestiges: 0 },
+      // デイリーボーナス連続ログイン
+      daily: { lastClaimDay: '', streak: 0 },
+      // 解除済み実績ID
+      achievementsUnlocked: {},
     };
   }
 
@@ -55,6 +59,8 @@
         : new Array(GAME_DATA.FARM_SLOTS).fill(null);
       merged.collection = data.collection || {};
       merged.stats = Object.assign({ gachas: 0, prestiges: 0 }, data.stats || {});
+      merged.daily = Object.assign({ lastClaimDay: '', streak: 0 }, data.daily || {});
+      merged.achievementsUnlocked = data.achievementsUnlocked || {};
       state = merged;
       return true;
     } catch (e) {

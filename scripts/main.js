@@ -21,6 +21,8 @@
     UI.bindShop();
     UI.bindRewardAd();
     UI.bindCollectBtn();
+    UI.bindDaily();
+    UI.bindAchievements();
     UI.renderAll();
 
     // メインゲームループ (10fps tick + 4fps UI)
@@ -37,6 +39,12 @@
     setInterval(() => {
       UI.renderResources();
     }, 250);
+
+    // 実績バナーは少し低頻度で更新
+    setInterval(() => {
+      UI.renderAchievementsBanner();
+      UI.renderPrestigeProgress();
+    }, 1000);
 
     // 牧場グリッドはリソース表記より頻度低くてOK
     setInterval(() => {
