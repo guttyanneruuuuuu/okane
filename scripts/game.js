@@ -153,6 +153,70 @@
     return { ok: false, msg: '不明な商品' };
   }
 
+  // ----- デイリーボーナス -----
+  function todayKey() {
+    const d = new Date();
+    return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();
+  }
+  function yesterdayKey() {
+    const d = new Date();
+    d.setDate(d.getDate() - 1);
+    return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();
+  }
+
+  function canClaimDaily() {
+    const s = GameState.get();
+    return s.daily.lastClaimDay !== todayKey();
+  }
+
+  function claimDaily() {
+    if (!canClaimDaily()) return { ok: false, msg: '今日のボーナスは受け取り済みです' };
+    const s = GameState.get();
+    // streak: 昨日受け取った場合は+1、そうでなければ1にリセット
+    if (s.daily.lastClaimDay === yesterdayKey()) {
+      s.daily.streak += 1;
+    } else {
+      s.daily.streak = 1;
+    }
+    // streakが配列を超えたら最終日(=最後)を継続
+    const idx = Math.min(s.daily.streak - 1, GAME_DATA.DAILY_REWARDS.length - 1);
+    const reward = GAME_DATA.DAILY_REWARDS[idx];
+    if (reward.type === 'coins') {
+      s.coins += reward.amount;
+      s.totalEarned += reward.amount;
+    } else if (reward.type === 'tickets') {
+      s.tickets += reward.amount;
+    }
+    s.daily.lastClaimDay = todayKey();
+    return { ok: true, reward, day: s.daily.streak };
+  }
+
+  // ----- 実績 -----
+  function pendingAchievements() {
+    const s = GameState.get();
+    return GAME_DATA.ACHIEVEMENTS.filter(a => !s.achievementsUnlocked[a.id] && a.check(s));
+  }
+
+  function claimAchievement(id) {
+    const s = GameState.get();
+    if (s.achievementsUnlocked[id]) return { ok: false };
+    const ach = GAME_DATA.ACHIEVEMENTS.find(a => a.id === id);
+    if (!ach || !ach.check(s)) return { ok: false };
+    s.achievementsUnlocked[id] = Date.now();
+    if (ach.reward.coins)   { s.coins += ach.reward.coins; s.totalEarned += ach.reward.coins; }
+    if (ach.reward.tickets) { s.tickets += ach.reward.tickets; }
+    return { ok: true, ach };
+  }
+
+  function claimAllAchievements() {
+    const claimed = [];
+    pendingAchievements().forEach(a => {
+      const r = claimAchievement(a.id);
+      if (r.ok) claimed.push(r.ach);
+    });
+    return claimed;
+  }
+
   global.Game = {
     animalCps,
     collectionBonus,
@@ -167,5 +231,11 @@
     doPrestige,
     applyBoost,
     buy,
+    // 新規
+    canClaimDaily,
+    claimDaily,
+    pendingAchievements,
+    claimAchievement,
+    claimAllAchievements,
   };
 })(window);

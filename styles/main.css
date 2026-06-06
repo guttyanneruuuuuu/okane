@@ -496,3 +496,97 @@ html, body {
   padding: 2px 8px;
   border-radius: 999px;
 }
+
+/* ===== Daily banner ===== */
+.daily-banner, .ach-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  margin-bottom: 12px;
+  border: 1px solid var(--border);
+  font-size: 0.95em;
+  animation: bannerPop 0.4s ease;
+}
+.daily-banner { background: linear-gradient(135deg, #fff3c4, #ffe9a3); }
+.ach-banner   { background: linear-gradient(135deg, #d8f0c8, #c0e3a5); }
+.daily-banner.hidden, .ach-banner.hidden { display: none; }
+.daily-text, .ach-text { display: flex; flex-direction: column; gap: 2px; }
+.daily-streak {
+  font-size: 0.78em;
+  color: var(--text-soft);
+}
+@keyframes bannerPop {
+  from { transform: translateY(-8px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* ===== Prestige progress ===== */
+.prestige-item { flex-wrap: wrap; }
+.prestige-progress { margin-top: 6px; }
+.prestige-progress-bar {
+  background: var(--surface-alt);
+  border-radius: 999px;
+  height: 8px;
+  overflow: hidden;
+  margin-bottom: 4px;
+}
+.prestige-bar-fill {
+  background: linear-gradient(90deg, var(--secondary), var(--accent));
+  height: 100%;
+  width: 0%;
+  transition: width 0.3s ease;
+}
+.prestige-progress-text {
+  font-size: 0.75em;
+  color: var(--text-soft);
+}
+#prestige-current {
+  font-size: 0.8em;
+  color: var(--secondary-dark);
+}
+
+/* ===== Achievements ===== */
+.achievements-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.ach-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 0.9em;
+}
+.ach-item .ach-icon { font-size: 1.4em; }
+.ach-item .ach-detail { flex: 1; }
+.ach-item .ach-name { font-weight: 600; }
+.ach-item .ach-desc { font-size: 0.75em; color: var(--text-soft); }
+.ach-item .ach-reward {
+  font-size: 0.75em;
+  color: var(--secondary-dark);
+  font-weight: 600;
+}
+.ach-item.is-locked { opacity: 0.55; }
+.ach-item.is-claimed {
+  background: linear-gradient(135deg, #e6f0e0, #d0e6c2);
+  border-color: var(--primary);
+}
+.ach-item.is-claimed .ach-icon::after { content: ' ✓'; color: var(--primary-dark); }
+
+/* デイリー報酬モーダル */
+.daily-reward-modal .modal-body { text-align: center; }
+.daily-reward-icon { font-size: 3em; }
+.daily-reward-label {
+  font-size: 1.4em;
+  font-weight: 700;
+  margin: 10px 0;
+  color: var(--secondary-dark);
+}
+.daily-reward-streak { color: var(--text-soft); font-size: 0.9em; margin-bottom: 10px; }

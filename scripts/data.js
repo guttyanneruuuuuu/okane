@@ -75,6 +75,31 @@
   // オフライン効率 50%
   const OFFLINE_EFFICIENCY = 0.5;
 
+  // デイリーボーナス (1日目から)
+  // streakがリセットされず連続で受け取った日数分インデックスが進む
+  const DAILY_REWARDS = [
+    { type: 'coins',   amount: 100,  label: '🪙 100' },
+    { type: 'coins',   amount: 250,  label: '🪙 250' },
+    { type: 'tickets', amount: 1,    label: '🎫 ×1' },
+    { type: 'coins',   amount: 500,  label: '🪙 500' },
+    { type: 'tickets', amount: 2,    label: '🎫 ×2' },
+    { type: 'coins',   amount: 1500, label: '🪙 1500' },
+    { type: 'tickets', amount: 5,    label: '🎫 ×5 (🎉)' },
+  ];
+
+  // 実績
+  const ACHIEVEMENTS = [
+    { id: 'first_gacha',   name: 'はじめの一歩',     desc: 'ガチャを1回引く',        check: s => s.stats.gachas >= 1,                      reward: { coins: 100 } },
+    { id: 'gacha_10',      name: '常連客',            desc: 'ガチャを累計10回引く',   check: s => s.stats.gachas >= 10,                     reward: { tickets: 1 } },
+    { id: 'gacha_100',     name: 'ガチャ中毒',        desc: 'ガチャを累計100回引く',  check: s => s.stats.gachas >= 100,                    reward: { tickets: 5 } },
+    { id: 'collect_5',     name: '動物好き',          desc: '5種類の動物を集める',    check: s => Object.keys(s.collection).length >= 5,    reward: { coins: 500 } },
+    { id: 'collect_10',    name: '牧場主',            desc: '10種類の動物を集める',   check: s => Object.keys(s.collection).length >= 10,   reward: { coins: 2000 } },
+    { id: 'collect_all',   name: '完璧主義者',        desc: '全種類の動物を集める',   check: s => Object.keys(s.collection).length >= ANIMALS.length, reward: { tickets: 30 } },
+    { id: 'got_rare4',     name: 'スーパースター!',   desc: '★4の動物を入手',         check: s => Object.entries(s.collection).some(([id]) => (ANIMALS.find(a=>a.id===id)||{}).rarity === 4), reward: { coins: 1000 } },
+    { id: 'got_rare5',     name: '伝説の使い手',      desc: '★5の動物を入手',         check: s => Object.entries(s.collection).some(([id]) => (ANIMALS.find(a=>a.id===id)||{}).rarity === 5), reward: { tickets: 10 } },
+    { id: 'first_prestige',name: '転生者',            desc: '初めてプレステージ',      check: s => s.stats.prestiges >= 1,                  reward: { tickets: 5 } },
+  ];
+
   // 公開
   global.GAME_DATA = {
     FARM_SLOTS,
@@ -93,6 +118,8 @@
     SHOP_BOOST_SEC,
     OFFLINE_MAX_SEC,
     OFFLINE_EFFICIENCY,
+    DAILY_REWARDS,
+    ACHIEVEMENTS,
   };
 
   // 便利関数: id から動物データを取得
