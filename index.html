@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#7ec8a6" />
+  <title>のんびり農場ガチャ</title>
+  <link rel="stylesheet" href="styles/main.css" />
+</head>
+<body>
+  <div id="app">
+    <!-- ヘッダー: 通貨表示 -->
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-icon">🌾</span>
+        <span class="brand-name">のんびり農場</span>
+      </div>
+      <div class="resources">
+        <div class="resource" title="コイン">
+          <span class="res-icon">🪙</span>
+          <span id="coin-value">0</span>
+        </div>
+        <div class="resource" title="チケット">
+          <span class="res-icon">🎫</span>
+          <span id="ticket-value">0</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- タブ -->
+    <nav class="tabs" role="tablist">
+      <button class="tab is-active" data-tab="farm" role="tab">🐄 牧場</button>
+      <button class="tab" data-tab="gacha" role="tab">🎰 ガチャ</button>
+      <button class="tab" data-tab="book" role="tab">📖 図鑑</button>
+      <button class="tab" data-tab="shop" role="tab">🛒 ショップ</button>
+    </nav>
+
+    <main class="content">
+      <!-- 牧場(メイン) -->
+      <section id="tab-farm" class="tab-panel is-active">
+        <div class="rate-card">
+          <div class="rate-label">毎秒の生産量</div>
+          <div class="rate-value"><span id="cps-value">0</span> 🪙/秒</div>
+          <button id="collect-btn" class="btn btn-primary">タップで＋ボーナス</button>
+        </div>
+
+        <div class="farm-grid" id="farm-grid" aria-label="動物配置">
+          <!-- JSで描画 -->
+        </div>
+
+        <!-- 広告枠プレースホルダ(将来差し込み) -->
+        <div class="ad-slot" data-ad-slot="farm-bottom">
+          <div class="ad-placeholder">
+            <span>動画を見て<strong>収益2倍ブースト(60秒)</strong></span>
+            <button id="reward-ad-btn" class="btn btn-outline">▶ 視聴する</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ガチャ -->
+      <section id="tab-gacha" class="tab-panel">
+        <div class="gacha-hero">
+          <div class="gacha-title">🎰 動物ガチャ</div>
+          <div class="gacha-desc">コインを使って動物を仲間に！同じ動物はレベルが上がります。</div>
+        </div>
+
+        <div class="gacha-actions">
+          <button id="gacha-1-btn" class="btn btn-primary big">
+            <div>1回引く</div>
+            <div class="cost">🪙 <span id="gacha-cost-1">100</span></div>
+          </button>
+          <button id="gacha-10-btn" class="btn btn-secondary big">
+            <div>10回引く</div>
+            <div class="cost">🪙 <span id="gacha-cost-10">900</span></div>
+          </button>
+          <button id="gacha-ticket-btn" class="btn btn-outline big">
+            <div>チケットで引く</div>
+            <div class="cost">🎫 1枚</div>
+          </button>
+        </div>
+
+        <div class="rarity-rates" aria-label="レアリティ確率">
+          <div class="rate-row"><span class="rarity r1">★</span><span id="rate-1">-</span>%</div>
+          <div class="rate-row"><span class="rarity r2">★★</span><span id="rate-2">-</span>%</div>
+          <div class="rate-row"><span class="rarity r3">★★★</span><span id="rate-3">-</span>%</div>
+          <div class="rate-row"><span class="rarity r4">★★★★</span><span id="rate-4">-</span>%</div>
+          <div class="rate-row"><span class="rarity r5">★★★★★</span><span id="rate-5">-</span>%</div>
+        </div>
+
+        <!-- ガチャ結果モーダル -->
+        <div id="gacha-result" class="modal hidden" role="dialog" aria-modal="true">
+          <div class="modal-bg"></div>
+          <div class="modal-body">
+            <h3>ガチャ結果</h3>
+            <div id="gacha-result-grid" class="result-grid"></div>
+            <button id="gacha-result-close" class="btn btn-primary">OK</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 図鑑 -->
+      <section id="tab-book" class="tab-panel">
+        <div class="book-stats">
+          <div>コンプリート: <strong id="book-progress">0 / 0</strong></div>
+          <div>コンプリートボーナス: <strong id="book-bonus">+0%</strong></div>
+        </div>
+        <div id="book-grid" class="book-grid"></div>
+      </section>
+
+      <!-- ショップ / 課金枠プレースホルダ -->
+      <section id="tab-shop" class="tab-panel">
+        <h3 class="shop-title">🛒 ショップ</h3>
+        <div class="shop-list">
+          <div class="shop-item">
+            <div class="shop-icon">🎫</div>
+            <div class="shop-detail">
+              <div class="shop-name">ガチャチケット ×1</div>
+              <div class="shop-desc">コインを消費せずに1回ガチャを引ける</div>
+            </div>
+            <button class="btn btn-primary" data-shop="ticket-1">🪙 500</button>
+          </div>
+          <div class="shop-item">
+            <div class="shop-icon">⚡</div>
+            <div class="shop-detail">
+              <div class="shop-name">スピードアップ(5分)</div>
+              <div class="shop-desc">5分間、生産量2倍</div>
+            </div>
+            <button class="btn btn-primary" data-shop="boost-5">🪙 300</button>
+          </div>
+          <div class="shop-item">
+            <div class="shop-icon">🌟</div>
+            <div class="shop-detail">
+              <div class="shop-name">プレステージ</div>
+              <div class="shop-desc">進行をリセットして永続ボーナスを獲得</div>
+            </div>
+            <button id="prestige-btn" class="btn btn-secondary">挑戦する</button>
+          </div>
+
+          <!-- 課金枠プレースホルダ(将来差し込み) -->
+          <div class="iap-divider">アプリ版 限定特典 (準備中)</div>
+          <div class="shop-item iap-item">
+            <div class="shop-icon">💎</div>
+            <div class="shop-detail">
+              <div class="shop-name">スターターパック</div>
+              <div class="shop-desc">コイン10,000 + チケット10枚</div>
+            </div>
+            <button class="btn btn-disabled" disabled>近日</button>
+          </div>
+          <div class="shop-item iap-item">
+            <div class="shop-icon">🎁</div>
+            <div class="shop-detail">
+              <div class="shop-name">月パス</div>
+              <div class="shop-desc">毎日チケット5枚を30日間配布</div>
+            </div>
+            <button class="btn btn-disabled" disabled>近日</button>
+          </div>
+        </div>
+
+        <div class="danger-zone">
+          <button id="reset-btn" class="btn btn-ghost">セーブを全削除</button>
+        </div>
+      </section>
+    </main>
+
+    <!-- トースト -->
+    <div id="toast" class="toast hidden"></div>
+  </div>
+
+  <script src="scripts/data.js"></script>
+  <script src="scripts/state.js"></script>
+  <script src="scripts/gacha.js"></script>
+  <script src="scripts/game.js"></script>
+  <script src="scripts/ui.js"></script>
+  <script src="scripts/main.js"></script>
+</body>
+</html>
